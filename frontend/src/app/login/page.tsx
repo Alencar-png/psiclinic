@@ -145,20 +145,6 @@ export default function LoginPage() {
             anamnese versionada, sessões com sigilo médico, criptografia
             ponta-a-ponta e auditoria LGPD.
           </p>
-
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {[
-              { t: "Sigilo médico", d: "Anamnese e observações cifradas em repouso" },
-              { t: "LGPD-ready", d: "Auditoria completa de acessos a prontuário" },
-              { t: "Multi-tenant", d: "Isolamento total entre clínicas via RLS" },
-              { t: "Versionado", d: "Histórico imutável de alterações" },
-            ].map((f) => (
-              <div key={f.t} className="rounded-xl border border-border bg-white p-3">
-                <p className="text-xs font-medium text-primary-900">{f.t}</p>
-                <p className="text-[11px] text-stone-500 mt-0.5">{f.d}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
