@@ -52,7 +52,12 @@ export async function api<T = unknown>(
   path: string,
   opts: { method?: Method; body?: unknown; query?: Record<string, any> } = {},
 ): Promise<T> {
-  const url = new URL(`${API}${path}`);
+  // API pode ser absoluto ("http://localhost:4200/api" em dev) OU relativo
+  // ("/api" em prod, mesmo domínio). Quando relativo, URL() exige uma base —
+  // usamos a origin da página atual no browser, ou um placeholder no SSR
+  // (que nunca chega a usar essa URL para fazer fetch real).
+  const base = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  const url = new URL(`${API}${path}`, base);
   if (opts.query) {
     Object.entries(opts.query).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
