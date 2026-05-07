@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: psiclinic
+      POSTGRES_PASSWORD: psiclinic
+      POSTGRES_DB: psiclinic
+    ports:
+      # Mapeia 5433 do host -> 5432 do container (5432 já usado por outro pg local)
+      - "5433:5432"
+    volumes:
+      - psiclinic_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U psiclinic -d psiclinic"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer:4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    ports:
+      - "8080:8080"
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql+psycopg://psiclinic:psiclinic@postgres:5432/psiclinic
+      JWT_SECRET: dev-jwt-secret-change-me
+      MASTER_ENCRYPTION_KEY_B64: ${MASTER_ENCRYPTION_KEY_B64:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 4200 --reload"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4200/api
+      # File-watching no Docker para Windows: força polling a cada 1s
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  psiclinic_pg:

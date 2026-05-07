@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  /* Fundo cinza muito sutil — cria contraste com cards brancos.
+     Aplicar no html também previne "quadrado branco" no overscroll/bottom. */
+  @apply bg-stone-50 text-brand-text antialiased;
+}
+body {
+  font-family: "Inter", "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ─── Componentes utilitários (espelham Emotion Care) ─────────── */
+
+@layer components {
+  /* Inputs */
+  .input-psiclinic {
+    @apply h-[42px] rounded-md px-3 border border-brand-border bg-white text-body-sm text-brand-text;
+    @apply placeholder:text-brand-muted outline-none transition-all duration-200;
+    @apply focus:border-primary focus:ring-[3px] focus:ring-primary/20;
+    @apply disabled:bg-brand-bg-muted disabled:text-brand-muted disabled:cursor-not-allowed;
+  }
+  .input-psiclinic-sm {
+    @apply h-9 rounded-md px-3 border border-brand-border bg-white text-body-sm;
+    @apply placeholder:text-brand-muted outline-none transition-all duration-200;
+    @apply focus:border-primary focus:ring-[3px] focus:ring-primary/20;
+  }
+
+  .label-psiclinic {
+    @apply block text-body-sm font-medium text-brand-text mb-1.5;
+  }
+
+  /* Cards */
+  .card-psiclinic {
+    @apply bg-white rounded-xl border border-brand-border shadow-xs;
+  }
+  .card-body { @apply p-6; }
+
+  /* Botões */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md font-medium;
+    @apply transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary  { @apply bg-primary text-primary-fg hover:bg-primary-hover active:bg-primary-active; }
+  .btn-secondary { @apply bg-white text-brand-text border border-brand-border hover:bg-brand-bg-muted; }
+  .btn-ghost     { @apply bg-transparent text-brand-text-2 hover:bg-brand-bg-muted; }
+  .btn-danger    { @apply bg-error text-white hover:bg-red-700; }
+
+  .btn-sm  { @apply h-8 px-3 text-xs; }
+  .btn-md  { @apply h-10 px-4 text-body-sm; }
+  .btn-lg  { @apply h-12 px-5 text-body; }
+  .btn-icon { @apply h-10 w-10 p-0; }
+  .btn-icon-sm { @apply h-8 w-8 p-0; }
+
+  /* Page header */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6;
+  }
+  .page-header h1 { @apply text-heading-2 text-brand-text; }
+  .page-header .desc { @apply text-body-sm text-brand-muted mt-0.5; }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border;
+  }
+  .badge-success { @apply bg-success-bg text-success border-success-border; }
+  .badge-warning { @apply bg-warning-bg text-warning border-warning-border; }
+  .badge-error   { @apply bg-error-bg text-error border-error-border; }
+  .badge-info    { @apply bg-info-bg text-info border-info-border; }
+  .badge-muted   { @apply bg-stone-100 text-stone-600 border-stone-200; }
+  .badge-primary { @apply bg-primary-light text-primary-dark border-primary-border; }
+}
+
+/* TipTap rich-text */
+.tiptap {
+  @apply min-h-[300px] rounded-xl border border-brand-border bg-white p-4 outline-none;
+  @apply text-body-sm text-brand-text;
+}
+.tiptap p { @apply leading-relaxed mb-2; }
+.tiptap ul { @apply list-disc pl-6; }
+.tiptap ol { @apply list-decimal pl-6; }
+.tiptap mark { @apply bg-yellow-100; }
+.tiptap blockquote { @apply border-l-4 border-brand-border pl-4 italic text-brand-muted; }
+
+/* Animações reutilizáveis */
+.animate-in { animation-duration: 0.2s; animation-fill-mode: both; }
+.fade-in-0 { animation-name: fade-in-anim; }
+@keyframes fade-in-anim {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.zoom-in-95 {
+  animation-name: zoom-in-anim;
+}
+@keyframes zoom-in-anim {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

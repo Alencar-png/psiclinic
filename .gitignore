@@ -1,0 +1,48 @@
+# ───── Python ─────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ───── Node / Next ─────
+node_modules/
+.next/
+.turbo/
+out/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ───── Logs e temporários ─────
+*.log
+backend.log
+frontend.log
+.pytest_cache/
+.coverage
+var/
+attachments/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ───── Editor / OS ─────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ───── Build / artefatos do deploy ─────
+.deploy/
+*.tar.gz
+backend/.deploy_ssh.py
+backend/.deploy_sftp.py
+docker-compose-up.log
+
+# ───── Segredos (NUNCA commitar) ─────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
