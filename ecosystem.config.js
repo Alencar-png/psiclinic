@@ -38,8 +38,11 @@ module.exports = {
     {
       name: 'psiclinic-frontend',
       cwd: '/opt/psiclinic/frontend',
-      script: 'npm',
-      args: 'run start',
+      // Chama o binário do next direto, evitando o `-p 3000` hardcoded em
+      // package.json:scripts.start. -H 127.0.0.1 amarra ao loopback —
+      // só o nginx alcança.
+      script: '/opt/psiclinic/frontend/node_modules/.bin/next',
+      args: 'start -p 3010 -H 127.0.0.1',
       interpreter: 'none',
       autorestart: true,
       max_restarts: 10,
@@ -49,8 +52,6 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         NEXT_TELEMETRY_DISABLED: '1',
-        PORT: '3010',
-        HOSTNAME: '127.0.0.1',
       },
       out_file: '/var/log/psiclinic/frontend.out.log',
       error_file: '/var/log/psiclinic/frontend.err.log',
