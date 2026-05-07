@@ -28,6 +28,27 @@ interface NavItem {
   roles?: Role[];
 }
 
+/**
+ * Rótulo PT-BR para o role exibido no perfil do usuário.
+ * Para `doctor`, usa o gênero implícito do nome (prefixo "Dra." → feminino,
+ * caso contrário masculino) — falha em alguns casos, mas evita o "Médico(a)"
+ * cosmético.
+ */
+function roleLabelPtBr(role: Role, fullName: string): string {
+  switch (role) {
+    case "super_admin":
+      return "Super administrador";
+    case "clinic_admin":
+      return "Administrador da clínica";
+    case "receptionist":
+      return "Recepção";
+    case "doctor":
+      return /^\s*dra\.?\s/i.test(fullName) ? "Médica" : "Médico";
+    default:
+      return role;
+  }
+}
+
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard, roles: ["super_admin", "clinic_admin", "doctor", "receptionist"] },
   { href: "/companies", label: "Empresas", icon: Building2, roles: ["super_admin"] },
@@ -155,7 +176,7 @@ export function Sidebar({ me, collapsed, onToggleCollapsed, mobileOpen, onCloseM
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-white truncate">{me.full_name}</p>
-                <p className="text-[10px] text-white/60 capitalize">{me.role.replace("_", " ")}</p>
+                <p className="text-[10px] text-white/60">{roleLabelPtBr(me.role, me.full_name)}</p>
               </div>
             )}
           </div>
