@@ -43,6 +43,9 @@ docker-compose-up.log
 .env
 .env.*
 !.env.example
+# .env.production é versionado: contém apenas configs públicas de build
+# (NEXT_PUBLIC_API_URL) — nunca colocar segredos aqui.
+!.env.production
 *.pem
 *.key
 secrets/
