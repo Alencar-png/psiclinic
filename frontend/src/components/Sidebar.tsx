@@ -9,6 +9,7 @@ import {
   Building2,
   UserCog,
   Users,
+  ShieldCheck,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -54,7 +55,8 @@ const NAV: NavItem[] = [
   { href: "/companies", label: "Empresas", icon: Building2, roles: ["super_admin"] },
   { href: "/agenda",    label: "Agenda",   icon: CalendarDays, roles: ["clinic_admin", "doctor", "receptionist"] },
   { href: "/patients",  label: "Pacientes", icon: Users, roles: ["clinic_admin", "doctor", "receptionist"] },
-  { href: "/doctors",   label: "Médicos", icon: UserCog, roles: ["clinic_admin"] },
+  { href: "/doctors",   label: "Profissionais", icon: UserCog, roles: ["clinic_admin"] },
+  { href: "/users",     label: "Usuários", icon: ShieldCheck, roles: ["super_admin", "clinic_admin"] },
 ];
 
 interface Props {

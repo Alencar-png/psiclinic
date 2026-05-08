@@ -7,8 +7,8 @@ import {
   Edit2, FileText, Calendar, Phone, Mail, MapPin, Briefcase, User, CheckCircle2,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Page, PatientDetail, SessionListItem } from "@/types";
-import { Badge, Button, PageHeader, useConfirm, useToast } from "@/components/ui";
+import type { Me, Page, PatientDetail, SessionListItem } from "@/types";
+import { Badge, Button, LoadingState, PageHeader, useConfirm, useToast } from "@/components/ui";
 import { formatCpf, formatDateTimeBR, formatPhone } from "@/lib/format";
 
 export default function PatientDetailPage() {
@@ -17,21 +17,26 @@ export default function PatientDetailPage() {
   const { toast } = useToast();
   const confirm = useConfirm();
 
+  const [me, setMe] = useState<Me | null>(null);
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [sessions, setSessions] = useState<Page<SessionListItem> | null>(null);
 
   async function load() {
     try {
-      const [p, s] = await Promise.all([
+      const [m, p, s] = await Promise.all([
+        api<Me>("/auth/me"),
         api<PatientDetail>(`/patients/${id}`),
         api<Page<SessionListItem>>(`/patients/${id}/sessions`, { query: { size: 50 } }),
       ]);
-      setPatient(p); setSessions(s);
+      setMe(m); setPatient(p); setSessions(s);
     } catch (e: any) {
       toast("error", e.message || "Erro ao carregar paciente");
     }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+
+  // Recepção pode agendar mas não toma decisão clínica nem lê observações.
+  const isReceptionist = me?.role === "receptionist";
 
   async function discharge() {
     const ok = await confirm({
@@ -50,13 +55,21 @@ export default function PatientDetailPage() {
     }
   }
 
-  if (!patient) return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+  if (!patient) return <LoadingState message="Carregando paciente" hint="Buscando dados clínicos…" />;
+
+  // Fallback: se o backend não devolveu `age` (ex: cache antigo), calcula daqui.
+  const age = (typeof patient.age === "number" && !Number.isNaN(patient.age))
+    ? patient.age
+    : computeAge(patient.birth_date);
+  const genderLabel = patient.gender === "M" ? "Masculino"
+    : patient.gender === "F" ? "Feminino"
+    : "Sexo não informado";
 
   return (
     <>
       <PageHeader
         title={patient.full_name}
-        description={`${formatCpf(patient.cpf)} • ${patient.age} anos • ${patient.gender === "M" ? "Masculino" : patient.gender === "F" ? "Feminino" : "Sexo não informado"}`}
+        description={`${formatCpf(patient.cpf)} • ${age != null ? `${age} anos` : "Idade não informada"} • ${genderLabel}`}
         back={{ href: "/patients" }}
         actions={
           <>
@@ -67,15 +80,19 @@ export default function PatientDetailPage() {
               onClick={() => router.push(`/patients/${id}/edit` as any)}>
               Editar
             </Button>
-            {patient.status === "active" && (
+            {/* "Dar alta" é decisão clínica — recepção não decide */}
+            {!isReceptionist && patient.status === "active" && (
               <Button variant="secondary" leftIcon={<CheckCircle2 className="w-4 h-4" />} onClick={discharge}>
                 Dar alta
               </Button>
             )}
-            <Button variant="secondary" leftIcon={<FileText className="w-4 h-4" />}
-              onClick={() => router.push(`/patients/${id}/anamnesis` as any)}>
-              {patient.has_anamnesis ? "Anamnese" : "Criar anamnese"}
-            </Button>
+            {/* Anamnese é prontuário — recepção não acessa */}
+            {!isReceptionist && (
+              <Button variant="secondary" leftIcon={<FileText className="w-4 h-4" />}
+                onClick={() => router.push(`/patients/${id}/anamnesis` as any)}>
+                {patient.has_anamnesis ? "Anamnese" : "Criar anamnese"}
+              </Button>
+            )}
             <Button leftIcon={<Calendar className="w-4 h-4" />}
               onClick={() => router.push(`/patients/${id}/sessions/new` as any)}>
               Nova sessão
@@ -166,6 +183,22 @@ export default function PatientDetailPage() {
       </section>
     </>
   );
+}
+
+/**
+ * Calcula idade em anos a partir de "YYYY-MM-DD" (ou Date string ISO).
+ * Retorna `null` se a data for inválida — assim a UI mostra "Idade não informada"
+ * em vez de "NaN anos".
+ */
+function computeAge(birthDate?: string | null): number | null {
+  if (!birthDate) return null;
+  const b = new Date(birthDate);
+  if (Number.isNaN(b.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - b.getFullYear();
+  const m = today.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age -= 1;
+  return age >= 0 ? age : null;
 }
 
 function InfoCard({

@@ -11,3 +11,5 @@ export type { Column } from "./DataTable";
 export { PageHeader } from "./PageHeader";
 export { FormSection } from "./FormSection";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs";
+export { Spinner } from "./Spinner";
+export { LoadingState } from "./LoadingState";

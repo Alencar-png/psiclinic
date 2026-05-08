@@ -16,6 +16,7 @@ from app.routers import (
     doctors,
     patients,
     sessions as sessions_router,
+    users,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -49,6 +50,7 @@ app.include_router(sessions_router.patients_router, prefix=prefix)
 app.include_router(sessions_router.sessions_router, prefix=prefix)
 app.include_router(catalog.router, prefix=prefix)
 app.include_router(dashboard.router, prefix=prefix)
+app.include_router(users.router, prefix=prefix)
 
 
 @app.get(f"{prefix}/health", tags=["meta"])

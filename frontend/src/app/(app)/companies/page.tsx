@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Edit2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { Building2, Edit2, LogIn, Trash2, AlertTriangle } from "lucide-react";
+import { api, tokenStore } from "@/lib/api";
 import type { Company, Page } from "@/types";
 import {
-  Badge, Button, DataTable, PageHeader, useToast,
+  Badge, Button, DataTable, Input, Modal, PageHeader, useToast,
   type Column,
 } from "@/components/ui";
 import { formatCnpj, formatDateBR } from "@/lib/format";
@@ -19,6 +19,12 @@ export default function CompaniesListPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  // Modal de delete: armazena a empresa-alvo + texto digitado p/ confirmar.
+  const [deleting, setDeleting] = useState<Company | null>(null);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  // Loading p/ "acessar como" — bloqueia clique duplo.
+  const [impersonatingId, setImpersonatingId] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -32,6 +38,48 @@ export default function CompaniesListPage() {
     }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [search, page]);
+
+  async function impersonate(c: Company) {
+    setImpersonatingId(c.id);
+    try {
+      const res = await api<{ access_token: string }>(
+        `/companies/${c.id}/impersonate`,
+        { method: "POST" },
+      );
+      tokenStore.startImpersonation(res.access_token);
+      toast("success", `Acessando como admin de ${c.name}`);
+      // Replace força full reload do layout (pra reler /auth/me com o novo token)
+      router.replace("/dashboard");
+      setTimeout(() => router.refresh(), 50);
+    } catch (e: any) {
+      toast("error", e.message || "Não foi possível acessar como admin");
+      setImpersonatingId(null);
+    }
+  }
+
+  function openDelete(c: Company) {
+    setDeleting(c);
+    setConfirmText("");
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    setDeleteSubmitting(true);
+    try {
+      await api(`/companies/${deleting.id}`, {
+        method: "DELETE",
+        query: { confirm: deleting.name },
+      });
+      toast("success", `Empresa "${deleting.name}" excluída permanentemente`);
+      setDeleting(null);
+      setConfirmText("");
+      await load();
+    } catch (e: any) {
+      toast("error", e.message || "Falha ao excluir empresa");
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
 
   const columns: Column<Company>[] = [
     {
@@ -59,19 +107,41 @@ export default function CompaniesListPage() {
     },
     {
       key: "actions",
-      header: "",
-      width: "80px",
+      header: "Ações",
+      width: "180px",
       render: (c) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); router.push(`/companies/${c.id}/edit` as any); }}
-          className="p-1.5 rounded-md hover:bg-primary-light text-brand-muted hover:text-primary"
-          aria-label="Editar"
-        >
-          <Edit2 className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => impersonate(c)}
+            disabled={impersonatingId === c.id}
+            className="p-1.5 rounded-md hover:bg-primary-light text-brand-muted hover:text-primary disabled:opacity-50 disabled:cursor-wait"
+            aria-label={`Acessar como admin de ${c.name}`}
+            title="Acessar como admin desta empresa"
+          >
+            <LogIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => router.push(`/companies/${c.id}/edit` as any)}
+            className="p-1.5 rounded-md hover:bg-primary-light text-brand-muted hover:text-primary"
+            aria-label="Editar"
+            title="Editar"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => openDelete(c)}
+            className="p-1.5 rounded-md hover:bg-red-50 text-brand-muted hover:text-red-600"
+            aria-label={`Excluir ${c.name}`}
+            title="Excluir empresa (irreversível)"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ];
+
+  const confirmMatches = !!deleting && confirmText.trim() === deleting.name.trim();
 
   return (
     <>
@@ -98,6 +168,65 @@ export default function CompaniesListPage() {
         loading={loading}
         empty="Nenhuma empresa cadastrada ainda."
       />
+
+      {/* ────────────────────────────────────────────────────────────────
+          Modal: confirmação de exclusão hard
+          Exige digitar o nome exato — defesa contra clique acidental.
+         ──────────────────────────────────────────────────────────────── */}
+      <Modal
+        open={!!deleting}
+        onClose={() => { if (!deleteSubmitting) { setDeleting(null); setConfirmText(""); } }}
+        title="Excluir empresa permanentemente"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => { setDeleting(null); setConfirmText(""); }}
+              disabled={deleteSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              disabled={!confirmMatches || deleteSubmitting}
+              loading={deleteSubmitting}
+              leftIcon={<Trash2 className="w-4 h-4" />}
+            >
+              Excluir definitivamente
+            </Button>
+          </>
+        }
+      >
+        {deleting && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-lg bg-red-50 border border-red-200 p-4 text-red-900">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="text-sm leading-relaxed">
+                <p className="font-medium">Esta ação é irreversível.</p>
+                <p className="mt-1">
+                  Serão removidos em cascade: usuários (admin, médicos, recepção),
+                  pacientes, sessões clínicas, anamneses e versões, prescrições,
+                  consentimentos e tokens de sessão. Os logs de auditoria são
+                  preservados (com vínculo nulo).
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-brand-muted">
+              Para confirmar, digite o nome exato da empresa:{" "}
+              <span className="font-mono font-medium text-brand-text">{deleting.name}</span>
+            </p>
+            <Input
+              autoFocus
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={deleting.name}
+              disabled={deleteSubmitting}
+            />
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

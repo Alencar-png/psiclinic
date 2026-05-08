@@ -147,9 +147,10 @@ def get_patient(
     if not p:
         raise HTTPException(404, "Paciente não encontrado")
 
-    # Recepcionista NÃO pode ver detalhe completo
-    if user.role == UserRole.RECEPTIONIST.value:
-        raise HTTPException(403, "Recepção não tem acesso ao detalhe do paciente")
+    # Recepção PODE ler dados demográficos (necessário p/ agendar e confirmar
+    # identidade do paciente). Dados clínicos sensíveis estão em endpoints
+    # próprios (anamnesis, sessões com observações), com guards específicos
+    # que continuam negando recepção.
 
     audit.write_audit(
         db,
@@ -264,6 +265,7 @@ def _to_detail(p: Patient) -> PatientDetail:
         full_name=dec.full_name,
         cpf=dec.cpf,
         birth_date=dec.birth_date,
+        age=dec.age,
         gender=p.gender,
         mother_name=dec.mother_name,
         father_name=dec.father_name,

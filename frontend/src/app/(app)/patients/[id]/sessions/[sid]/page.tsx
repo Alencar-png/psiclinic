@@ -10,10 +10,10 @@ import { api } from "@/lib/api";
 import { RichTextEditor } from "@/components/clinical/RichTextEditor";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import {
-  Badge, Button, Input, Modal, PageHeader, Select, useConfirm, useToast,
+  Badge, Button, Input, LoadingState, Modal, PageHeader, Select, useConfirm, useToast,
 } from "@/components/ui";
 import { formatDateTimeBR } from "@/lib/format";
-import type { SessionDetail, SessionStatus } from "@/types";
+import type { Me, SessionDetail, SessionStatus } from "@/types";
 
 const STATUS_LABEL: Record<SessionStatus, string> = {
   scheduled: "Agendada",
@@ -78,9 +78,13 @@ export default function SessionPage() {
   const { id, sid } = useParams<{ id: string; sid: string }>();
   const { toast } = useToast();
   const confirm = useConfirm();
+  const [me, setMe] = useState<Me | null>(null);
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyOpen, setHistoryOpen] = useState(true);
+
+  // Recepção: vê metadados (quando, com quem) — não vê observações clínicas.
+  const isReceptionist = me?.role === "receptionist";
 
   // Modal de reagendamento
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -90,10 +94,12 @@ export default function SessionPage() {
 
   async function load() {
     try {
-      const [s, h] = await Promise.all([
+      const [m, s, h] = await Promise.all([
+        api<Me>("/auth/me"),
         api<SessionDetail>(`/sessions/${sid}`),
         api<HistoryEntry[]>(`/sessions/${sid}/history`),
       ]);
+      setMe(m);
       setSession(s);
       setHistory(h);
       setReschedDate(s.scheduled_at.slice(0, 16));
@@ -181,7 +187,7 @@ export default function SessionPage() {
     } catch (e: any) { toast("error", e.message); }
   }
 
-  if (!session) return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+  if (!session) return <LoadingState message="Carregando sessão" hint="Decifrando observações clínicas…" />;
 
   const locked = !!session.locked_at;
   const status = session.status;
@@ -240,34 +246,51 @@ export default function SessionPage() {
         </MetaCard>
       </div>
 
-      {/* Observações */}
-      <section className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-heading-3 text-brand-text">Observações da sessão</h2>
-          <p className="text-caption text-brand-muted">
-            {saveStatus === "saving" && "Salvando…"}
-            {saveStatus === "saved" && lastSavedAt && `Salvo às ${lastSavedAt.toLocaleTimeString("pt-BR")}`}
-            {saveStatus === "error" && <span className="text-error">Erro ao salvar</span>}
-          </p>
-        </div>
-        {locked && (
-          <div className="mb-3 rounded-xl bg-warning-bg border border-warning-border px-4 py-3 text-sm text-warning flex items-start gap-2">
-            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+      {/* Observações — recepção não acessa (sigilo médico) */}
+      {isReceptionist ? (
+        <section className="mb-6">
+          <h2 className="text-heading-3 text-brand-text mb-2">Observações da sessão</h2>
+          <div className="rounded-xl bg-brand-bg-subtle border border-brand-border px-4 py-6 flex items-start gap-3 text-brand-muted">
+            <Lock className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium">Sessão bloqueada para edição</p>
-              <p className="text-caption mt-0.5">Use o botão <strong>Criar adendo</strong> para correções.</p>
+              <p className="text-body-sm font-medium text-brand-text">Conteúdo restrito</p>
+              <p className="text-caption mt-0.5">
+                Observações clínicas só ficam visíveis para o médico responsável.
+                Você pode reagendar, alterar status (faltou/cancelada) e visualizar
+                metadados acima.
+              </p>
             </div>
           </div>
-        )}
-        <RichTextEditor
-          value={session.observations_html ?? ""}
-          disabled={locked}
-          onChange={(html, plain) => schedule(html, plain)}
-        />
-        <p className="mt-2 text-caption text-brand-muted">
-          Auto-save a cada 1,5s de inatividade. Conteúdo cifrado em repouso (AES-256-GCM).
-        </p>
-      </section>
+        </section>
+      ) : (
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-heading-3 text-brand-text">Observações da sessão</h2>
+            <p className="text-caption text-brand-muted">
+              {saveStatus === "saving" && "Salvando…"}
+              {saveStatus === "saved" && lastSavedAt && `Salvo às ${lastSavedAt.toLocaleTimeString("pt-BR")}`}
+              {saveStatus === "error" && <span className="text-error">Erro ao salvar</span>}
+            </p>
+          </div>
+          {locked && (
+            <div className="mb-3 rounded-xl bg-warning-bg border border-warning-border px-4 py-3 text-sm text-warning flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Sessão bloqueada para edição</p>
+                <p className="text-caption mt-0.5">Use o botão <strong>Criar adendo</strong> para correções.</p>
+              </div>
+            </div>
+          )}
+          <RichTextEditor
+            value={session.observations_html ?? ""}
+            disabled={locked}
+            onChange={(html, plain) => schedule(html, plain)}
+          />
+          <p className="mt-2 text-caption text-brand-muted">
+            Auto-save a cada 1,5s de inatividade. Conteúdo cifrado em repouso (AES-256-GCM).
+          </p>
+        </section>
+      )}
 
       {/* Histórico de alterações */}
       <section className="card-psiclinic">

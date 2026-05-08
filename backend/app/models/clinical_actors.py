@@ -25,6 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.config.database import Base
+from app.models.enums import ProfessionalType
 
 if TYPE_CHECKING:
     from .auth import User
@@ -53,6 +54,12 @@ class Doctor(Base):
     cpf: Mapped[str] = mapped_column(String(64), nullable=False)  # hash HMAC
 
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Tipo do profissional — define se o número de registro é CRM (médico) ou
+    # CRP (psicólogo). Default 'doctor' para compatibilidade retroativa.
+    professional_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ProfessionalType.DOCTOR.value
+    )
+    # Coluna `crm` é genérica: armazena CRM ou CRP (string crua).
     crm: Mapped[str] = mapped_column(String(20), nullable=False)
     crm_uf: Mapped[str] = mapped_column(String(2), nullable=False)
     specialty: Mapped[str | None] = mapped_column(String(120))

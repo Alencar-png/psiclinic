@@ -59,6 +59,7 @@ def list_doctors(
         DoctorOut(
             id=d.id,
             full_name=d.full_name,
+            professional_type=d.professional_type,
             crm=d.crm,
             crm_uf=d.crm_uf,
             specialty=d.specialty,
@@ -134,6 +135,7 @@ def create_doctor(
         user_id=user_row.id,
         cpf=cpf_hash,
         full_name=body.full_name,
+        professional_type=body.professional_type.value,
         crm=body.crm,
         crm_uf=body.crm_uf,
         specialty=body.specialty,
@@ -234,6 +236,7 @@ def _to_out(db: Session, d: Doctor) -> DoctorOut:
     return DoctorOut(
         id=d.id,
         full_name=d.full_name,
+        professional_type=d.professional_type,
         crm=d.crm,
         crm_uf=d.crm_uf,
         specialty=d.specialty,

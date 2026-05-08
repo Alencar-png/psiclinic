@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { User, Home } from "lucide-react";
 import { api } from "@/lib/api";
-import { Button, FormSection, Input, PageHeader, Select, useToast } from "@/components/ui";
+import { Button, FormSection, Input, LoadingState, PageHeader, Select, useToast } from "@/components/ui";
 import { digits, formatPhone } from "@/lib/format";
 import type { PatientDetail, PatientStatus } from "@/types";
 
@@ -48,7 +48,7 @@ export default function EditPatientPage() {
     } finally { setLoading(false); }
   }
 
-  if (!p) return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+  if (!p) return <LoadingState message="Carregando paciente" />;
 
   return (
     <>

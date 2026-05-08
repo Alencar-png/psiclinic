@@ -98,11 +98,23 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        // Onda de 3 dots: cada bolinha pulsa em delay diferente (loop)
+        "pulse-dot": {
+          "0%, 80%, 100%": { transform: "scale(0.6)", opacity: "0.4" },
+          "40%": { transform: "scale(1)", opacity: "1" },
+        },
+        // Skeleton shimmer — gradiente que desliza p/ direita
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "zoom-in": "zoom-in 0.2s ease-out",
+        "pulse-dot": "pulse-dot 1.2s ease-in-out infinite",
+        shimmer: "shimmer 1.6s linear infinite",
       },
     },
   },

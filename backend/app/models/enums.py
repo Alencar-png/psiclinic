@@ -18,6 +18,18 @@ class CompanyStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class ProfessionalType(str, enum.Enum):
+    """Tipo do profissional na tabela `doctors` (mantemos esse nome de tabela
+    por questão de compatibilidade — engloba todos os profissionais clínicos).
+
+    O label do registro profissional na UI varia conforme o tipo:
+    - DOCTOR → CRM (Conselho Regional de Medicina)
+    - PSYCHOLOGIST → CRP (Conselho Regional de Psicologia)
+    """
+    DOCTOR = "doctor"
+    PSYCHOLOGIST = "psychologist"
+
+
 class PatientStatus(str, enum.Enum):
     ACTIVE = "active"
     INACTIVE = "inactive"

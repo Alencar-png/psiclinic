@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserCog, Edit2, Trash2 } from "lucide-react";
+import { UserCog, Edit2, Trash2, Stethoscope, Brain } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Doctor, Page } from "@/types";
 import { Badge, Button, DataTable, PageHeader, useToast, useConfirm, type Column } from "@/components/ui";
 import { formatDateBR, formatPhone } from "@/lib/format";
+import { formatRegistration, professionalTypeLabel } from "@/lib/professional";
 
-export default function DoctorsListPage() {
+export default function ProfessionalsListPage() {
   const router = useRouter();
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -25,14 +26,15 @@ export default function DoctorsListPage() {
       const res = await api<Page<Doctor>>("/doctors", { query: { search: search || undefined, page, size: 20 } });
       setData(res);
     } catch (e: any) {
-      toast("error", e.message || "Erro ao carregar médicos");
+      toast("error", e.message || "Erro ao carregar profissionais");
     } finally { setLoading(false); }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [search, page]);
 
   async function deactivate(d: Doctor) {
+    const labelGenero = professionalTypeLabel(d.professional_type, d.full_name).toLowerCase();
     const ok = await confirm({
-      title: "Desativar médico",
+      title: `Desativar ${labelGenero}`,
       message: `Deseja desativar ${d.full_name}?\nO vínculo com a clínica será marcado como inativo. Esta ação pode ser revertida via reativação manual.`,
       variant: "danger",
       confirmLabel: "Desativar",
@@ -40,7 +42,7 @@ export default function DoctorsListPage() {
     if (!ok) return;
     try {
       await api(`/doctors/${d.id}`, { method: "DELETE" });
-      toast("success", "Médico desativado.");
+      toast("success", `${labelGenero[0].toUpperCase() + labelGenero.slice(1)} desativado(a).`);
       load();
     } catch (e: any) {
       toast("error", e.message || "Erro ao desativar");
@@ -57,7 +59,25 @@ export default function DoctorsListPage() {
         </Link>
       ),
     },
-    { key: "crm", header: "CRM", render: (d) => `${d.crm}/${d.crm_uf}` },
+    {
+      key: "type",
+      header: "Tipo",
+      render: (d) => (
+        <Badge variant={d.professional_type === "psychologist" ? "info" : "muted"}>
+          <span className="inline-flex items-center gap-1">
+            {d.professional_type === "psychologist"
+              ? <Brain className="w-3 h-3" />
+              : <Stethoscope className="w-3 h-3" />}
+            {professionalTypeLabel(d.professional_type, d.full_name)}
+          </span>
+        </Badge>
+      ),
+    },
+    {
+      key: "registration",
+      header: "Registro",
+      render: (d) => formatRegistration(d.professional_type, d.crm, d.crm_uf),
+    },
     { key: "specialty", header: "Especialidade", render: (d) => d.specialty ?? "—" },
     { key: "email", header: "E-mail", render: (d) => d.email },
     { key: "phone", header: "Telefone", render: (d) => formatPhone(d.phone) },
@@ -101,11 +121,11 @@ export default function DoctorsListPage() {
   return (
     <>
       <PageHeader
-        title="Médicos"
-        description="Gerencie os médicos vinculados à clínica."
+        title="Profissionais"
+        description="Gerencie médicos e psicólogos vinculados à clínica."
         actions={
           <Button leftIcon={<UserCog className="w-4 h-4" />} onClick={() => router.push("/doctors/new")}>
-            Novo médico
+            Novo profissional
           </Button>
         }
       />
@@ -121,7 +141,7 @@ export default function DoctorsListPage() {
         search={search}
         onSearchChange={(s) => { setSearch(s); setPage(1); }}
         loading={loading}
-        empty="Nenhum médico cadastrado ainda."
+        empty="Nenhum profissional cadastrado ainda."
       />
     </>
   );

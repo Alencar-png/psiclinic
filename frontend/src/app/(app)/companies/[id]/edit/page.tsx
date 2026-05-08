@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Building2, MapPin, Settings } from "lucide-react";
 import { api } from "@/lib/api";
 import {
-  Button, FormSection, Input, PageHeader, Select, useToast,
+  Button, FormSection, Input, LoadingState, PageHeader, Select, useToast,
 } from "@/components/ui";
 import { digits, formatPhone, formatCep } from "@/lib/format";
 import type { Company, CompanyStatus } from "@/types";
@@ -52,7 +52,7 @@ export default function EditCompanyPage() {
     }
   }
 
-  if (!c) return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+  if (!c) return <LoadingState message="Carregando empresa" />;
 
   return (
     <>

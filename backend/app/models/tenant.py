@@ -42,17 +42,20 @@ class Company(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)            # Razão social
     trade_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     cnpj: Mapped[str] = mapped_column(String(14), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Campos relaxados — só name+cnpj continuam mandatórios. Os demais ficaram
+    # nullable para permitir cadastro rápido (super_admin completa depois).
+    email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(20))
     address: Mapped[str | None] = mapped_column(String(500))
     city: Mapped[str | None] = mapped_column(String(120))
     state: Mapped[str | None] = mapped_column(String(2))
     zip_code: Mapped[str | None] = mapped_column(String(8))
 
-    # Responsável técnico (Resolução CFM 2.073/2014)
-    technical_responsible_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    technical_responsible_crm: Mapped[str] = mapped_column(String(20), nullable=False)
-    technical_responsible_uf: Mapped[str] = mapped_column(String(2), nullable=False)
+    # Responsável técnico (Resolução CFM 2.073/2014). Em prod a clínica deve
+    # ter — mas no cadastro inicial deixamos opcional pra fluxo rápido.
+    technical_responsible_name: Mapped[str | None] = mapped_column(String(255))
+    technical_responsible_crm: Mapped[str | None] = mapped_column(String(20))
+    technical_responsible_uf: Mapped[str | None] = mapped_column(String(2))
 
     plan_id: Mapped[int | None] = mapped_column(ForeignKey("plans.id"))
     status: Mapped[str] = mapped_column(

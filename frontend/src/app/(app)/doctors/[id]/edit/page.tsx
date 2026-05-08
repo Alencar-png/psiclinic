@@ -4,13 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { UserCog } from "lucide-react";
 import { api } from "@/lib/api";
-import { Button, FormSection, Input, PageHeader, Select, useToast } from "@/components/ui";
+import { Button, FormSection, Input, LoadingState, PageHeader, Select, useToast } from "@/components/ui";
 import { digits, formatPhone } from "@/lib/format";
 import type { Doctor } from "@/types";
+import {
+  formatRegistration,
+  professionalTypeLabel,
+  registrationLabel,
+  SPECIALTIES_BY_TYPE,
+} from "@/lib/professional";
 
-const ESPECIALIDADES = ["Psiquiatria","Psiquiatria Infantil","Psicogeriatria","Neurologia","Clínica Médica"];
-
-export default function EditDoctorPage() {
+export default function EditProfessionalPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -39,30 +43,43 @@ export default function EditDoctorPage() {
         is_active: d.is_active,
       };
       await api(`/doctors/${id}`, { method: "PATCH", body: payload });
-      toast("success", "Médico atualizado.");
+      toast("success", "Profissional atualizado.");
       router.push("/doctors");
     } catch (e: any) {
       toast("error", e.message || "Erro ao salvar");
     } finally { setLoading(false); }
   }
 
-  if (!d) return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+  if (!d) return <LoadingState message="Carregando profissional" />;
+
+  const specialties = SPECIALTIES_BY_TYPE[d.professional_type];
+  const regLabel = registrationLabel(d.professional_type);
+  const typeLabel = professionalTypeLabel(d.professional_type, d.full_name);
 
   return (
     <>
-      <PageHeader title={`Editar — ${d.full_name}`} back={{ href: "/doctors" }} />
+      <PageHeader
+        title={`Editar — ${d.full_name}`}
+        description={`${typeLabel} · ${formatRegistration(d.professional_type, d.crm, d.crm_uf)}`}
+        back={{ href: "/doctors" }}
+      />
       <form onSubmit={handleSubmit} className="max-w-3xl card-psiclinic card-body space-y-8">
         <FormSection title="Dados profissionais" icon={UserCog}>
           <div className="md:col-span-2">
             <Input label="Nome completo" required value={d.full_name}
               onChange={(e) => set("full_name", e.target.value)} />
           </div>
-          <Input label="CRM" disabled value={`${d.crm}/${d.crm_uf}`} hint="CRM/UF não pode ser alterado." />
+          <Input
+            label={regLabel}
+            disabled
+            value={`${d.crm}/${d.crm_uf}`}
+            hint={`${regLabel}/UF não pode ser alterado.`}
+          />
           <Input label="E-mail" disabled value={d.email} />
           <Select label="Especialidade" value={d.specialty ?? ""}
             onChange={(e) => set("specialty", e.target.value)}>
             <option value="">—</option>
-            {ESPECIALIDADES.map((e) => <option key={e} value={e}>{e}</option>)}
+            {specialties.map((e) => <option key={e} value={e}>{e}</option>)}
           </Select>
           <Input label="Telefone" value={formatPhone(d.phone || "")}
             onChange={(e) => set("phone", e.target.value)} placeholder="(00) 00000-0000" />
@@ -77,8 +94,10 @@ export default function EditDoctorPage() {
             className="w-4 h-4 accent-primary"
           />
           <label htmlFor="active" className="text-body-sm">
-            <strong className="text-brand-text">Médico ativo</strong>
-            <p className="text-caption text-brand-muted">Desmarque para impedir login e novos atendimentos.</p>
+            <strong className="text-brand-text">Profissional ativo</strong>
+            <p className="text-caption text-brand-muted">
+              Desmarque para impedir login e novos atendimentos.
+            </p>
           </label>
         </div>
 

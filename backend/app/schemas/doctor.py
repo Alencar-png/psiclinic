@@ -1,15 +1,23 @@
-"""Schemas de médicos."""
+"""Schemas de profissionais clínicos (médicos e psicólogos).
+
+A tabela permanece chamada `doctors` por compatibilidade — o campo
+`professional_type` discrimina o tipo. UI mostra "CRM" ou "CRP" no
+campo `crm` conforme o tipo.
+"""
 from __future__ import annotations
 
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 
+from app.models.enums import ProfessionalType
+
 
 class DoctorBase(BaseModel):
     full_name: str = Field(min_length=3, max_length=255)
     cpf: str
-    crm: str
+    professional_type: ProfessionalType = ProfessionalType.DOCTOR
+    crm: str  # Genérico — pode ser CRM ou CRP, string crua sem prefixo.
     crm_uf: str = Field(min_length=2, max_length=2)
     specialty: str | None = None
     rqe: str | None = None
@@ -24,13 +32,20 @@ class DoctorBase(BaseModel):
             raise ValueError("CPF deve ter 11 dígitos")
         return only
 
+    @field_validator("specialty", "rqe", "phone", mode="before")
+    @classmethod
+    def _empty_to_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
 
 class DoctorCreate(DoctorBase):
     password: str | None = Field(
         default=None,
-        min_length=12,
+        min_length=4,
         max_length=128,
-        description="Senha inicial. Se omitida, o médico recebe link de definição por e-mail.",
+        description="Senha inicial. Se omitida, gera-se uma aleatória.",
     )
 
 
@@ -45,6 +60,7 @@ class DoctorUpdate(BaseModel):
 class DoctorOut(BaseModel):
     id: int
     full_name: str
+    professional_type: ProfessionalType
     crm: str
     crm_uf: str
     specialty: str | None = None

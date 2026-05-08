@@ -4,6 +4,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect } from "react";
+import { Spinner } from "@/components/ui";
 
 interface Props {
   value: string;
@@ -39,7 +40,14 @@ export function RichTextEditor({ value, onChange, disabled, placeholder }: Props
     }
   }, [value, editor]);
 
-  if (!editor) return <div className="tiptap text-stone-400">Carregando editor…</div>;
+  if (!editor) {
+    return (
+      <div className="rounded-xl border border-border bg-white p-8 flex flex-col items-center justify-center gap-3 text-stone-400 min-h-[200px]">
+        <Spinner variant="ring" size="md" tone="muted" />
+        <p className="text-body-sm">Carregando editor…</p>
+      </div>
+    );
+  }
 
   const btn = (active: boolean) =>
     `rounded-md px-2 py-1 text-sm ${active ? "bg-primary-50 text-primary-900" : "text-stone-600 hover:bg-stone-100"}`;

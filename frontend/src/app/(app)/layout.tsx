@@ -6,6 +6,8 @@ import { Menu } from "lucide-react";
 import { api, tokenStore } from "@/lib/api";
 import type { Me } from "@/types";
 import { Sidebar } from "@/components/Sidebar";
+import { ImpersonationBanner } from "@/components/ImpersonationBanner";
+import { LoadingState } from "@/components/ui";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ConfirmDialogProvider } from "@/components/ui/ConfirmDialog";
 
@@ -29,8 +31,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-brand-muted text-body-sm">
-        Carregando…
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <LoadingState variant="page" message="Carregando seu workspace" hint="Verificando credenciais…" />
       </div>
     );
   }
@@ -57,6 +59,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             collapsed ? "lg:pl-sidebar-collapsed" : "lg:pl-sidebar"
           }`}
         >
+          {/* Banner de impersonação — sticky no topo, só aparece se super_admin
+              está logado como admin de uma empresa. */}
+          <ImpersonationBanner me={me} />
+
           {/* Botão hambúrguer (apenas mobile) */}
           <button
             onClick={() => setMobileOpen(true)}

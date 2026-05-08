@@ -66,6 +66,7 @@ class PatientListItem(BaseModel):
 
 class PatientDetail(PatientBase):
     id: UUID
+    age: int  # Derivado de birth_date — front consome direto, evita recalcular.
     status: PatientStatus
     company_id: int
     primary_doctor_id: int | None = None

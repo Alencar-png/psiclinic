@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import {
-  Button, PageHeader, Tabs, TabsList, TabsTrigger, TabsContent, Textarea, useToast,
+  Button, LoadingState, PageHeader, Tabs, TabsList, TabsTrigger, TabsContent, Textarea, useToast,
 } from "@/components/ui";
 
 type AnamnesisOut = {
@@ -104,7 +104,7 @@ export default function AnamnesisPage() {
   }
 
   if (data === null && !isNew) {
-    return <p className="text-brand-muted text-body-sm">Carregando…</p>;
+    return <LoadingState message="Carregando anamnese" hint="Decifrando registros clínicos…" />;
   }
 
   const versionInfo = data?.current_version

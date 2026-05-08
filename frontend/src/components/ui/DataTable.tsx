@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Search, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
+import { Spinner } from "./Spinner";
 
 export interface Column<T> {
   key: string;
@@ -104,8 +105,11 @@ export function DataTable<T>({
           <tbody className="divide-y divide-brand-border">
             {loading && (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-brand-muted text-body-sm">
-                  Carregando…
+                <td colSpan={columns.length} className="px-4 py-16">
+                  <div className="flex flex-col items-center justify-center gap-3 text-brand-muted">
+                    <Spinner variant="ring" size="lg" tone="primary" />
+                    <p className="text-body-sm">Carregando…</p>
+                  </div>
                 </td>
               </tr>
             )}

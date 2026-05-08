@@ -1,6 +1,20 @@
 // Tipos espelhando schemas do backend.
 export type Role = "super_admin" | "clinic_admin" | "doctor" | "receptionist";
 
+export interface UserRow {
+  id: number;
+  full_name: string;
+  email: string;
+  role: Role;
+  company_id: number | null;
+  company_name: string | null;
+  is_active: boolean;
+  last_login_at: string | null;
+  has_doctor_profile: boolean;
+  doctor_id: number | null;
+  created_at: string;
+}
+
 export interface Me {
   id: number;
   email: string;
@@ -45,9 +59,13 @@ export interface Company {
   created_at: string;
 }
 
+export type ProfessionalType = "doctor" | "psychologist";
+
 export interface Doctor {
   id: number;
   full_name: string;
+  professional_type: ProfessionalType;
+  /** Pode ser CRM (médico) ou CRP (psicólogo) — discriminado por professional_type. */
   crm: string;
   crm_uf: string;
   specialty: string | null;
