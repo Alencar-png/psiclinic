@@ -7,6 +7,7 @@ import { api, tokenStore } from "@/lib/api";
 import type { Me } from "@/types";
 import { Sidebar } from "@/components/Sidebar";
 import { ImpersonationBanner } from "@/components/ImpersonationBanner";
+import { VersionBadge } from "@/components/VersionBadge";
 import { LoadingState } from "@/components/ui";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ConfirmDialogProvider } from "@/components/ui/ConfirmDialog";
@@ -80,6 +81,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <a href="#" className="hover:text-primary">Política de Privacidade</a>
           </footer>
         </div>
+
+        {/* Pílula de versão fixa no canto inferior direito — abre changelog. */}
+        <VersionBadge />
       </ConfirmDialogProvider>
     </ToastProvider>
   );
