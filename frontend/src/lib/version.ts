@@ -11,7 +11,7 @@
  *   - X.Y.0 → mudanças relevantes (novo módulo/tela)
  *   - X.Y.Z → patches/UX/correções
  */
-export const APP_VERSION = "0.2.0";
+export const APP_VERSION = "0.2.1";
 
 export type ChangelogTag =
   | "feature"   // novo módulo ou tela
@@ -36,6 +36,15 @@ export interface ChangelogEntry {
 /** Lista de versões — mais recente no topo. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.2.1",
+    date: "2026-05-08",
+    items: [
+      { tag: "feature", text: "Versionador com changelog no canto inferior direito — clique no badge para ver as últimas mudanças" },
+      { tag: "improve", text: "Bolinha pulsante avisa quando há nova versão; persistência por usuário em localStorage" },
+      { tag: "improve", text: "Tags coloridas no changelog (Novo, Melhoria, Correção, Segurança) para escaneamento rápido" },
+    ],
+  },
+  {
     version: "0.2.0",
     date: "2026-05-08",
     items: [
@@ -44,7 +53,6 @@ export const CHANGELOG: ChangelogEntry[] = [
       { tag: "feature", text: "Agenda agora tem visão mensal (grid 7×6 com mini-cards de eventos)" },
       { tag: "feature", text: "Super-admin pode acessar como administrador de qualquer clínica e excluir empresas" },
       { tag: "feature", text: "Banner de impersonação ao 'acessar como' admin de outra clínica" },
-      { tag: "feature", text: "Versionador com changelog no rodapé (este aqui)" },
       { tag: "improve", text: "Animação de loading consistente em todas as páginas (spinner ring + halo pulsante)" },
       { tag: "improve", text: "Erros do backend agora aparecem legíveis no toast (resolve '[object Object]')" },
       { tag: "improve", text: "Favicon e ícone do app — símbolo Ψ em fundo teal" },
